@@ -6,8 +6,7 @@ import (
     "github.com/bwmarrin/discordgo"
     "log"
     "strings"
-    "os"
-    "os/signal"
+    "github.com/cancer/niboshi-discord/pkg/message"
 )
 
 var(
@@ -94,12 +93,7 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 //メッセージを送信する関数
 func sendMessage(s *discordgo.Session, c *discordgo.Channel, msg string) {
-    _, err := s.ChannelMessageSend(c.ID, msg)
-
-    log.Println(">>> " + msg)
-    if err != nil {
-        log.Println("Error sending message: ", err)
-    }
+    message.Send(s, c, msg)
 }
 
 func startTimer(f func()) {
