@@ -6,12 +6,12 @@ import (
     "github.com/bwmarrin/discordgo"
     "log"
     "strings"
+    "os"
     "github.com/cancer/niboshi-discord/pkg/message"
+    "github.com/joho/godotenv"
 )
 
 var(
-    Token = "Bot Njg1MzM5OTQyNjMyOTQ3NzQ0.XmHQ3w.AaVuIlIN8MDVpBXXelrjOZFg6ks"
-    BotName = "<@!685339942632947744>"
     stopBot = make(chan bool)
     vcsession *discordgo.VoiceConnection
     HelloWorld = "!helloworld"
@@ -26,9 +26,12 @@ var(
 )
 
 func main() {
+    configure()
+
     // Discordのセッションを作成
     discord, err := discordgo.New()
-    discord.Token = Token
+    discord.Token = token()
+
     if err != nil {
         fmt.Println("Error logging in")
         fmt.Println(err)
@@ -47,6 +50,21 @@ func main() {
     return
 }
 
+func configure() {
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatal("Error loading .env file")
+    }
+}
+
+func token() string {
+    return fmt.Sprintf("Bot %s", os.Getenv("BOT_TOKEN"))
+}
+
+func botName() string {
+    return fmt.Sprintf("<@!%s>", os.Getenv("BOT_ID"))
+}
+
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
     // チャンネル取得
     c, err := s.State.Channel(m.ChannelID)
@@ -59,10 +77,10 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
     switch {
         // Bot宛に !helloworld コマンドが実行されたとき
-        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", BotName, HelloWorld)):
+        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", botName(), HelloWorld)):
             sendMessage(s, c, "Hello world!")
 
-        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", BotName, ChannelInfo)):
+        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", botName(), ChannelInfo)):
             guildChannels, _ := s.GuildChannels(c.GuildID)
             var sendText string
             for _, a := range guildChannels{
@@ -70,7 +88,7 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
             }
             sendMessage(s, c, sendText)
 
-        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", BotName, Members)):
+        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", botName(), Members)):
             members, _ := s.GuildMembers(c.GuildID, "", 100)
             var sendText string
             for _, m := range members{
@@ -78,15 +96,15 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
             }
             sendMessage(s, c, sendText)
 
-        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", BotName, TimerStart)):
+        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", botName(), TimerStart)):
             startTimer(func() {
                 sendMessage(s, c, fmt.Sprintf("にぼしが %s ぐらいをおしらせします", time.Now().Format(time.Stamp)))
             })
 
-        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", BotName, TimerStop)):
+        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", botName(), TimerStop)):
             stopTimer <- true
 
-        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", BotName, Genius)):
+        case strings.HasPrefix(m.Content, fmt.Sprintf("%s %s", botName(), Genius)):
             sendMessage(s, c, "ぼくはかしこいので")
     }
 }
